@@ -1,7 +1,10 @@
 import { useState } from 'react'
+import { AuthProvider } from './contexts/AuthContext'
+import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { UserProfile } from './components/UserProfile'
 import './App.css'
 
-function App() {
+function TaskManagerApp() {
   const [currentDateTime, setCurrentDateTime] = useState<string>('')
   const [currentQuote, setCurrentQuote] = useState<string>('')
 
@@ -44,6 +47,7 @@ function App() {
 
   return (
     <div className="app">
+      <UserProfile />
       <div className="welcome-container">
         <h1 className="welcome-title">Welcome to Taylor's Task Manager</h1>
         <p className="welcome-subtitle">
@@ -75,6 +79,16 @@ function App() {
         </div>
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ProtectedRoute>
+        <TaskManagerApp />
+      </ProtectedRoute>
+    </AuthProvider>
   )
 }
 
