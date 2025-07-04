@@ -34,7 +34,10 @@ export function useTasks() {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          *,
+          category:categories(*)
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
