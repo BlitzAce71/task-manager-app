@@ -4,6 +4,7 @@ import { AddTaskForm } from './AddTaskForm'
 import { TaskList } from './TaskList'
 import { EditTaskModal } from './EditTaskModal'
 import { UserProfile } from '../UserProfile'
+import { DatabaseDebug } from '../DatabaseDebug'
 import type { Task } from '../../types/database'
 import './TaskManager.css'
 
@@ -89,6 +90,8 @@ export function TaskManager() {
           loading={loading}
         />
       )}
+      
+      <DatabaseDebug />
     </div>
   )
 }
