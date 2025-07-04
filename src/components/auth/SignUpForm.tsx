@@ -73,18 +73,28 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
   }
 
   return (
-    <div className="auth-form">
-      <div className="auth-header">
-        <h2>Create Account</h2>
-        <p>Join Taylor's Task Manager today</p>
+    <div className="p-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
+        <p className="text-gray-600">Join Taylor's Task Manager today</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="auth-form-content">
-        {error && <div className="error-message">{error}</div>}
-        {message && <div className="success-message">{message}</div>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        {error && (
+          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm mb-2">
+            {error}
+          </div>
+        )}
+        {message && (
+          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-lg text-sm mb-2">
+            {message}
+          </div>
+        )}
 
-        <div className="form-group">
-          <label htmlFor="fullName">Full Name (Optional)</label>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="fullName" className="font-semibold text-gray-800 text-sm">
+            Full Name (Optional)
+          </label>
           <input
             id="fullName"
             type="text"
@@ -92,11 +102,14 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Enter your full name"
             disabled={loading}
+            className="px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="email">Email Address</label>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="email" className="font-semibold text-gray-800 text-sm">
+            Email Address
+          </label>
           <input
             id="email"
             type="email"
@@ -105,11 +118,14 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
             placeholder="Enter your email"
             required
             disabled={loading}
+            className="px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="password" className="font-semibold text-gray-800 text-sm">
+            Password
+          </label>
           <input
             id="password"
             type="password"
@@ -118,11 +134,14 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
             placeholder="Enter your password"
             required
             disabled={loading}
+            className="px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="confirmPassword" className="font-semibold text-gray-800 text-sm">
+            Confirm Password
+          </label>
           <input
             id="confirmPassword"
             type="password"
@@ -131,26 +150,27 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
             placeholder="Confirm your password"
             required
             disabled={loading}
+            className="px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
 
         <button
           type="submit"
-          className="auth-button"
           disabled={loading}
+          className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-700 text-white border-none px-4 py-4 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-300 mt-2 hover:transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
         >
           {loading ? 'Creating Account...' : 'Sign Up'}
         </button>
       </form>
 
-      <div className="auth-footer">
-        <p>
+      <div className="text-center pt-6 border-t border-gray-200 mt-6">
+        <p className="text-gray-600 m-0">
           Already have an account?{' '}
           <button
             type="button"
             onClick={onToggleMode}
-            className="auth-link"
             disabled={loading}
+            className="bg-none border-none text-blue-500 font-semibold cursor-pointer underline text-base hover:text-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Sign In
           </button>
