@@ -160,10 +160,11 @@ export function useTasks() {
     setTimeout(() => setSyncing(false), 500) // Brief visual indicator
   }
 
-  // Create task (no longer optimistically updates since real-time handles it)
+  // Create task with optimistic updates as fallback for real-time
   const createTask = async (taskData: CreateTaskData) => {
     if (!user) throw new Error('User not authenticated')
 
+    console.log('Creating task with data:', taskData)
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -171,47 +172,122 @@ export function useTasks() {
           ...taskData,
           user_id: user.id,
         })
-        .select()
+        .select(`
+          *,
+          category:categories(*)
+        `)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Create task error:', error)
+        throw error
+      }
+      console.log('Task created successfully:', data)
+      
+      // Optimistic update as fallback if real-time doesn't trigger
+      if (data) {
+        setTimeout(() => {
+          setTasks(prev => {
+            const exists = prev.some(task => task.id === data.id)
+            if (!exists) {
+              console.log('Adding task via optimistic update (real-time fallback)')
+              return [data, ...prev]
+            }
+            return prev
+          })
+        }, 1000) // Wait 1 second to see if real-time handles it
+      }
+      
       return data
     } catch (err) {
+      console.error('Create task failed:', err)
       const message = err instanceof Error ? err.message : 'Failed to create task'
       setError(message)
       throw new Error(message)
     }
   }
 
-  // Update task (no longer optimistically updates since real-time handles it)
+  // Update task with optimistic updates as fallback for real-time
   const updateTask = async (id: string, updates: UpdateTaskData) => {
+    console.log('Updating task:', id, 'with:', updates)
     try {
       const { data, error } = await supabase
         .from('tasks')
         .update(updates)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          category:categories(*)
+        `)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Update task error:', error)
+        throw error
+      }
+      console.log('Task updated successfully:', data)
+      
+      // Optimistic update as fallback if real-time doesn't trigger
+      if (data) {
+        setTimeout(() => {
+          setTasks(prev => {
+            const updated = prev.map(task => {
+              if (task.id === data.id) {
+                // Check if task has actually been updated by real-time
+                const hasChanged = JSON.stringify(task) !== JSON.stringify(data)
+                if (hasChanged) {
+                  console.log('Task already updated by real-time')
+                  return task
+                } else {
+                  console.log('Updating task via optimistic update (real-time fallback)')
+                  return data
+                }
+              }
+              return task
+            })
+            return updated
+          })
+        }, 1000) // Wait 1 second to see if real-time handles it
+      }
+      
       return data
     } catch (err) {
+      console.error('Update task failed:', err)
       const message = err instanceof Error ? err.message : 'Failed to update task'
       setError(message)
       throw new Error(message)
     }
   }
 
-  // Delete task (no longer optimistically updates since real-time handles it)
+  // Delete task with optimistic updates as fallback for real-time
   const deleteTask = async (id: string) => {
+    console.log('Deleting task:', id)
     try {
       const { error } = await supabase
         .from('tasks')
         .delete()
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Delete task error:', error)
+        throw error
+      }
+      console.log('Task deleted successfully')
+      
+      // Optimistic update as fallback if real-time doesn't trigger
+      setTimeout(() => {
+        setTasks(prev => {
+          const exists = prev.some(task => task.id === id)
+          if (exists) {
+            console.log('Removing task via optimistic update (real-time fallback)')
+            return prev.filter(task => task.id !== id)
+          }
+          return prev
+        })
+      }, 1000) // Wait 1 second to see if real-time handles it
+      
     } catch (err) {
+      console.error('Delete task failed:', err)
       const message = err instanceof Error ? err.message : 'Failed to delete task'
       setError(message)
       throw new Error(message)
@@ -275,10 +351,13 @@ export function useTasks() {
           handleRealtimeDelete
         )
         .subscribe((status) => {
+          console.log('Real-time subscription status:', status)
           if (status === 'SUBSCRIBED') {
-            console.log('Real-time subscription established')
+            console.log('Real-time subscription established successfully')
           } else if (status === 'CHANNEL_ERROR') {
-            console.error('Real-time subscription error')
+            console.error('Real-time subscription error - falling back to optimistic updates')
+          } else if (status === 'CLOSED') {
+            console.warn('Real-time subscription closed')
           }
         })
 
