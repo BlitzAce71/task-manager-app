@@ -173,14 +173,29 @@ export function useTasks() {
         setError(null)
         try {
           console.log('🔄 Fetching tasks and categories...')
-          await Promise.all([
-            fetchTasks(),
-            fetchCategories()
-          ])
+          
+          // Fetch tasks first
+          try {
+            await fetchTasks()
+            console.log('✅ Tasks loaded successfully')
+          } catch (tasksError) {
+            console.error('❌ Tasks fetch failed:', tasksError)
+            throw tasksError
+          }
+          
+          // Fetch categories second
+          try {
+            await fetchCategories()
+            console.log('✅ Categories loaded successfully')
+          } catch (categoriesError) {
+            console.error('❌ Categories fetch failed:', categoriesError)
+            throw categoriesError
+          }
+          
           console.log('✅ Both tasks and categories loaded successfully')
         } catch (error) {
           console.error('❌ Failed to load initial data:', error)
-          setError('Failed to load data')
+          setError(error instanceof Error ? error.message : 'Failed to load data')
         } finally {
           console.log('🔄 Data load complete, setting loading to false')
           setLoading(false)
