@@ -32,8 +32,6 @@ export function useTasks() {
     if (!user) return
 
     try {
-      setLoading(true)
-      setError(null)
       console.log('Fetching tasks for user:', user.id)
       
       const { data, error } = await supabase
@@ -56,9 +54,7 @@ export function useTasks() {
     } catch (err) {
       console.error('Failed to fetch tasks:', err)
       const message = err instanceof Error ? err.message : 'Failed to fetch tasks'
-      setError(message)
-    } finally {
-      setLoading(false)
+      throw new Error(message)
     }
   }
 
@@ -85,6 +81,7 @@ export function useTasks() {
       setCategories(data || [])
     } catch (err) {
       console.error('Failed to fetch categories:', err)
+      throw new Error(err instanceof Error ? err.message : 'Failed to fetch categories')
     }
   }
 
@@ -170,8 +167,22 @@ export function useTasks() {
   // Initial data fetch
   useEffect(() => {
     if (user) {
-      fetchTasks()
-      fetchCategories()
+      const loadData = async () => {
+        setLoading(true)
+        setError(null)
+        try {
+          await Promise.all([
+            fetchTasks(),
+            fetchCategories()
+          ])
+        } catch (error) {
+          console.error('Failed to load initial data:', error)
+          setError('Failed to load data')
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadData()
     }
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
