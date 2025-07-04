@@ -8,14 +8,13 @@ interface TaskListProps {
   onToggleStatus: (id: string) => Promise<void>
   onEdit: (task: Task) => void
   onDelete: (id: string) => Promise<void>
-  loading?: boolean
 }
 
 type FilterStatus = 'all' | 'todo' | 'in_progress' | 'completed' | 'cancelled'
 type FilterPriority = 'all' | TaskPriority
 type SortOption = 'created' | 'priority' | 'alphabetical' | 'due_date'
 
-export function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete, loading = false }: TaskListProps) {
+export function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete }: TaskListProps) {
   // State for all filters
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
@@ -130,11 +129,10 @@ export function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete, 
   // Check if any filters are active
   const hasActiveFilters = searchQuery.trim() || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all'
 
-  if (loading && tasks.length === 0) {
+  if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-lg">Loading tasks...</p>
+        <p className="text-lg">No tasks yet. Create your first task!</p>
       </div>
     )
   }
@@ -308,7 +306,6 @@ export function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete, 
               onToggleStatus={onToggleStatus}
               onEdit={onEdit}
               onDelete={onDelete}
-              loading={loading}
             />
           ))
         )}

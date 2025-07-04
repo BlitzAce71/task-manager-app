@@ -7,10 +7,9 @@ interface EditTaskModalProps {
   categories: Array<{ id: string; name: string; color: string }>
   onSave: (id: string, data: UpdateTaskData) => Promise<void>
   onClose: () => void
-  loading?: boolean
 }
 
-export function EditTaskModal({ task, categories, onSave, onClose, loading = false }: EditTaskModalProps) {
+export function EditTaskModal({ task, categories, onSave, onClose }: EditTaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [categoryId, setCategoryId] = useState('')

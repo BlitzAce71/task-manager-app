@@ -76,7 +76,6 @@ export function TaskManager() {
             <AddTaskForm
               categories={categories}
               onSubmit={handleCreateTask}
-              loading={loading}
             />
           </div>
         )}
@@ -88,7 +87,6 @@ export function TaskManager() {
             onToggleStatus={toggleTaskStatus}
             onEdit={setEditingTask}
             onDelete={deleteTask}
-            loading={loading}
           />
         </div>
       </div>
@@ -99,7 +97,6 @@ export function TaskManager() {
           categories={categories}
           onSave={handleUpdateTask}
           onClose={() => setEditingTask(null)}
-          loading={loading}
         />
       )}
       

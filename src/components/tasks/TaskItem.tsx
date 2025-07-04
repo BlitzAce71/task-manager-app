@@ -6,10 +6,9 @@ interface TaskItemProps {
   onToggleStatus: (id: string) => Promise<void>
   onEdit: (task: Task) => void
   onDelete: (id: string) => Promise<void>
-  loading?: boolean
 }
 
-export function TaskItem({ task, onToggleStatus, onEdit, onDelete, loading = false }: TaskItemProps) {
+export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemProps) {
   const [isToggling, setIsToggling] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 

@@ -5,10 +5,9 @@ import type { CreateTaskData } from '../../hooks/useTasks'
 interface AddTaskFormProps {
   categories: Array<{ id: string; name: string; color: string }>
   onSubmit: (data: CreateTaskData) => Promise<void>
-  loading?: boolean
 }
 
-export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFormProps) {
+export function AddTaskForm({ categories, onSubmit }: AddTaskFormProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [categoryId, setCategoryId] = useState('')
