@@ -126,8 +126,13 @@ export function useTasks() {
   }
 
   const handleRealtimeUpdate = async (payload: any) => {
-    if (payload.new?.user_id !== user?.id) return
+    console.log('Real-time UPDATE event received:', payload)
+    if (payload.new?.user_id !== user?.id) {
+      console.log('UPDATE event ignored - different user')
+      return
+    }
     
+    console.log('Processing real-time UPDATE for task:', payload.new.id)
     setSyncing(true)
     try {
       // Fetch the complete updated task with category relationship
@@ -141,9 +146,16 @@ export function useTasks() {
         .single()
 
       if (!error && data) {
-        setTasks(prev => prev.map(task => 
-          task.id === data.id ? data : task
-        ))
+        console.log('Real-time UPDATE: Updating task in state:', data)
+        setTasks(prev => {
+          const updated = prev.map(task => 
+            task.id === data.id ? data : task
+          )
+          console.log('Real-time UPDATE: Tasks state updated')
+          return updated
+        })
+      } else {
+        console.error('Real-time UPDATE: Failed to fetch updated task:', error)
       }
     } catch (err) {
       console.error('Error handling real-time update:', err)
@@ -234,13 +246,21 @@ export function useTasks() {
           setTasks(prev => {
             const updated = prev.map(task => {
               if (task.id === data.id) {
-                // Check if task has actually been updated by real-time
-                const hasChanged = JSON.stringify(task) !== JSON.stringify(data)
-                if (hasChanged) {
-                  console.log('Task already updated by real-time')
+                // Check if the specific field we updated actually changed
+                const statusMatches = task.status === data.status
+                const titleMatches = task.title === data.title
+                const descMatches = task.description === data.description
+                
+                if (statusMatches && titleMatches && descMatches) {
+                  console.log('Task already updated by real-time - UI is current')
                   return task
                 } else {
-                  console.log('Updating task via optimistic update (real-time fallback)')
+                  console.log('Updating task via optimistic update (real-time fallback)', {
+                    oldStatus: task.status,
+                    newStatus: data.status,
+                    oldTitle: task.title,
+                    newTitle: data.title
+                  })
                   return data
                 }
               }
