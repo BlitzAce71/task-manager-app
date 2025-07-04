@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logger } from '../utils/logger'
 import type { Task, TaskStatus, TaskPriority, Category } from '../types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -343,9 +344,9 @@ export function useTasks() {
 
   // Set up real-time subscription
   useEffect(() => {
-    console.log('useTasks effect triggered, user:', user?.id || 'null')
+    logger.debug('useTasks effect triggered', { userId: user?.id || 'null' })
     if (!user) {
-      console.log('No user found, setting loading to false and clearing data')
+      logger.info('No user found, clearing data and setting loading to false')
       setLoading(false)
       setTasks([])
       setCategories([])
