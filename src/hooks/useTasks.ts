@@ -33,6 +33,9 @@ export function useTasks() {
 
     try {
       setLoading(true)
+      setError(null)
+      console.log('Fetching tasks for user:', user.id)
+      
       const { data, error } = await supabase
         .from('tasks')
         .select(`
@@ -42,10 +45,18 @@ export function useTasks() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      console.log('Tasks fetch result:', { data, error })
+
+      if (error) {
+        console.error('Database error:', error)
+        throw error
+      }
+      
       setTasks(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch tasks')
+      console.error('Failed to fetch tasks:', err)
+      const message = err instanceof Error ? err.message : 'Failed to fetch tasks'
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -56,13 +67,21 @@ export function useTasks() {
     if (!user) return
 
     try {
+      console.log('Fetching categories for user:', user.id)
+      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
         .eq('user_id', user.id)
         .order('name')
 
-      if (error) throw error
+      console.log('Categories fetch result:', { data, error })
+
+      if (error) {
+        console.error('Categories error:', error)
+        throw error
+      }
+      
       setCategories(data || [])
     } catch (err) {
       console.error('Failed to fetch categories:', err)

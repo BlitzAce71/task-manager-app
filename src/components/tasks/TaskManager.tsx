@@ -51,6 +51,10 @@ export function TaskManager() {
       {error && (
         <div className="error-banner">
           <span>⚠️ {error}</span>
+          <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+            If you see "relation does not exist" errors, the database tables need to be created. 
+            Please run the migration in your Supabase dashboard.
+          </div>
         </div>
       )}
 
