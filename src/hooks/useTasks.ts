@@ -36,12 +36,33 @@ export function useTasks() {
   // Fetch tasks
   const fetchTasks = async () => {
     if (!user) {
-      console.log('No user found, skipping task fetch')
+      logger.info('No user found, skipping task fetch')
       return
     }
 
-    console.log('Fetching tasks for user:', user.id)
+    logger.info('Fetching tasks for user', { userId: user.id, email: user.email })
     try {
+      // First test basic connectivity
+      const { error: testError } = await supabase
+        .from('tasks')
+        .select('count')
+        .eq('user_id', user.id)
+        .limit(1)
+
+      if (testError) {
+        logger.error('Basic connectivity test failed', testError)
+        if (testError.message.includes('relation') || testError.message.includes('does not exist')) {
+          throw new Error('Database tables not found. Please check your Supabase setup.')
+        }
+        if (testError.message.includes('JWT') || testError.message.includes('token')) {
+          throw new Error('Authentication error. Please try signing out and back in.')
+        }
+        throw testError
+      }
+
+      logger.debug('Basic connectivity test passed')
+
+      // Now fetch full data
       const { data, error } = await supabase
         .from('tasks')
         .select(`
@@ -52,14 +73,14 @@ export function useTasks() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Database error:', error)
+        logger.error('Database error during task fetch', error)
         throw error
       }
       
-      console.log('Tasks fetched successfully:', data?.length || 0)
+      logger.info('Tasks fetched successfully', { count: data?.length || 0 })
       setTasks(data || [])
     } catch (err) {
-      console.error('Failed to fetch tasks:', err)
+      logger.error('Failed to fetch tasks', err)
       const message = err instanceof Error ? err.message : 'Failed to fetch tasks'
       throw new Error(message)
     }
@@ -68,11 +89,11 @@ export function useTasks() {
   // Fetch categories
   const fetchCategories = async () => {
     if (!user) {
-      console.log('No user found, skipping categories fetch')
+      logger.info('No user found, skipping categories fetch')
       return
     }
 
-    console.log('Fetching categories for user:', user.id)
+    logger.info('Fetching categories for user', { userId: user.id })
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -81,14 +102,14 @@ export function useTasks() {
         .order('name')
 
       if (error) {
-        console.error('Categories error:', error)
+        logger.error('Categories error', error)
         throw error
       }
       
-      console.log('Categories fetched successfully:', data?.length || 0)
+      logger.info('Categories fetched successfully', { count: data?.length || 0 })
       setCategories(data || [])
     } catch (err) {
-      console.error('Failed to fetch categories:', err)
+      logger.error('Failed to fetch categories', err)
       throw new Error(err instanceof Error ? err.message : 'Failed to fetch categories')
     }
   }

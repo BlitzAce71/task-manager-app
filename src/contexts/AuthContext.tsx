@@ -42,17 +42,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, 10000) // 10 second timeout
     
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       clearTimeout(timeoutId)
       console.log('AuthProvider: Initial session check', { 
         hasSession: !!session, 
         hasUser: !!session?.user,
+        userId: session?.user?.id,
         error: error?.message 
       })
       
       if (error) {
         console.error('AuthProvider: Error getting session:', error)
         setError(error.message)
+        setSession(null)
+        setUser(null)
+        setLoading(false)
+        return
+      }
+      
+      // If we have a session, ensure user profile exists
+      if (session?.user) {
+        try {
+          console.log('AuthProvider: Verifying user profile exists for:', session.user.id)
+          
+          // Check if user profile exists
+          const { data: existingUser, error: profileError } = await supabase
+            .from('users')
+            .select('id, email, full_name')
+            .eq('id', session.user.id)
+            .single()
+          
+          if (profileError) {
+            if (profileError.code === 'PGRST116') {
+              // User profile doesn't exist, create it
+              console.log('AuthProvider: User profile not found, creating...')
+              await createUserProfile(session.user)
+            } else {
+              console.error('AuthProvider: Error checking user profile:', profileError)
+              // Don't fail auth for profile errors, but log them
+            }
+          } else {
+            console.log('AuthProvider: User profile found:', existingUser)
+          }
+        } catch (profileErr) {
+          console.error('AuthProvider: Failed to verify/create user profile:', profileErr)
+          // Don't fail auth for profile errors
+        }
       }
       
       setSession(session)

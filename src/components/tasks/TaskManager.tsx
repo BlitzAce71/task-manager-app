@@ -5,6 +5,7 @@ import { TaskList } from './TaskList'
 import { EditTaskModal } from './EditTaskModal'
 import { UserProfile } from '../UserProfile'
 import { DatabaseDebug } from '../DatabaseDebug'
+import { AuthDebug } from '../AuthDebug'
 import { recovery } from '../../utils/recovery'
 import type { Task } from '../../types/database'
 
@@ -185,6 +186,7 @@ export function TaskManager() {
       )}
       
       <DatabaseDebug />
+      <AuthDebug />
     </div>
   )
 }
