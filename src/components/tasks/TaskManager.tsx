@@ -6,7 +6,6 @@ import { EditTaskModal } from './EditTaskModal'
 import { UserProfile } from '../UserProfile'
 import { DatabaseDebug } from '../DatabaseDebug'
 import type { Task } from '../../types/database'
-import './TaskManager.css'
 
 export function TaskManager() {
   const {
@@ -36,34 +35,34 @@ export function TaskManager() {
   }
 
   return (
-    <div className="task-manager">
-      <div className="task-manager-header">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 p-4 md:p-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <UserProfile />
-        <div className="header-content">
-          <h1>Task Manager</h1>
-          <p>Stay organized and get things done</p>
+        <div className="flex-1">
+          <h1 className="text-4xl font-bold text-white mb-2">Task Manager</h1>
+          <p className="text-blue-100 text-lg">Stay organized and get things done</p>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="add-task-toggle"
+          className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 px-6 py-3 rounded-xl font-semibold hover:bg-white/30 hover:border-white/50 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-white/25"
         >
           {showAddForm ? 'Cancel' : '+ Add Task'}
         </button>
       </div>
 
       {error && (
-        <div className="error-banner">
-          <span>⚠️ {error}</span>
-          <div style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+          <span className="font-medium">⚠️ {error}</span>
+          <div className="text-sm mt-2">
             If you see "relation does not exist" errors, the database tables need to be created. 
             Please run the migration in your Supabase dashboard.
           </div>
         </div>
       )}
 
-      <div className="task-manager-content">
+      <div className="space-y-8">
         {showAddForm && (
-          <div className="add-task-section">
+          <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
             <AddTaskForm
               categories={categories}
               onSubmit={handleCreateTask}
@@ -72,7 +71,7 @@ export function TaskManager() {
           </div>
         )}
 
-        <div className="task-list-section">
+        <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
           <TaskList
             tasks={tasks}
             onToggleStatus={toggleTaskStatus}

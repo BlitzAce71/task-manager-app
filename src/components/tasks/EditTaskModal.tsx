@@ -63,26 +63,29 @@ export function EditTaskModal({ task, categories, onSave, onClose, loading = fal
 
   if (!task) return null
 
-  const isDisabled = loading || isSubmitting || !title.trim()
+  const isDisabled = loading || isSubmitting
+  const isSubmitDisabled = isDisabled || !title.trim()
 
   return (
-    <div className="modal-overlay" onClick={handleBackdropClick}>
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3>Edit Task</h3>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={handleBackdropClick}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="flex items-center justify-between p-8 pb-0">
+          <h3 className="text-2xl font-semibold text-gray-900">Edit Task</h3>
           <button
             onClick={onClose}
-            className="close-button"
             disabled={isSubmitting}
+            className="text-gray-400 hover:text-gray-600 text-2xl p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
           >
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="edit-task-form">
-          <div className="form-grid">
-            <div className="form-group span-2">
-              <label htmlFor="edit-title">Title *</label>
+        <form onSubmit={handleSubmit} className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="md:col-span-2">
+              <label htmlFor="edit-title" className="block text-sm font-semibold text-gray-700 mb-2">
+                Title *
+              </label>
               <input
                 id="edit-title"
                 type="text"
@@ -92,11 +95,14 @@ export function EditTaskModal({ task, categories, onSave, onClose, loading = fal
                 required
                 disabled={isDisabled}
                 maxLength={255}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300"
               />
             </div>
 
-            <div className="form-group span-2">
-              <label htmlFor="edit-description">Description</label>
+            <div className="md:col-span-2">
+              <label htmlFor="edit-description" className="block text-sm font-semibold text-gray-700 mb-2">
+                Description
+              </label>
               <textarea
                 id="edit-description"
                 value={description}
@@ -105,16 +111,20 @@ export function EditTaskModal({ task, categories, onSave, onClose, loading = fal
                 disabled={isDisabled}
                 rows={3}
                 maxLength={1000}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300 resize-vertical min-h-[80px]"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="edit-status">Status</label>
+            <div>
+              <label htmlFor="edit-status" className="block text-sm font-semibold text-gray-700 mb-2">
+                Status
+              </label>
               <select
                 id="edit-status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as TaskStatus)}
                 disabled={isDisabled}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300 bg-white"
               >
                 <option value="todo">To Do</option>
                 <option value="in_progress">In Progress</option>
@@ -123,13 +133,16 @@ export function EditTaskModal({ task, categories, onSave, onClose, loading = fal
               </select>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="edit-priority">Priority</label>
+            <div>
+              <label htmlFor="edit-priority" className="block text-sm font-semibold text-gray-700 mb-2">
+                Priority
+              </label>
               <select
                 id="edit-priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
                 disabled={isDisabled}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300 bg-white"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -138,13 +151,16 @@ export function EditTaskModal({ task, categories, onSave, onClose, loading = fal
               </select>
             </div>
 
-            <div className="form-group span-2">
-              <label htmlFor="edit-category">Category</label>
+            <div className="md:col-span-2">
+              <label htmlFor="edit-category" className="block text-sm font-semibold text-gray-700 mb-2">
+                Category
+              </label>
               <select
                 id="edit-category"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 disabled={isDisabled}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300 bg-white"
               >
                 <option value="">No category</option>
                 {categories.map((category) => (
@@ -155,31 +171,34 @@ export function EditTaskModal({ task, categories, onSave, onClose, loading = fal
               </select>
             </div>
 
-            <div className="form-group span-2">
-              <label htmlFor="edit-dueDate">Due Date</label>
+            <div className="md:col-span-2">
+              <label htmlFor="edit-dueDate" className="block text-sm font-semibold text-gray-700 mb-2">
+                Due Date
+              </label>
               <input
                 id="edit-dueDate"
                 type="datetime-local"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 disabled={isDisabled}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300"
               />
             </div>
           </div>
 
-          <div className="modal-actions">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="cancel-button"
               disabled={isSubmitting}
+              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-all duration-300 hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="save-button"
-              disabled={isDisabled}
+              disabled={isSubmitDisabled}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>

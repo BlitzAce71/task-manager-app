@@ -58,43 +58,46 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete, loading = fal
     })
   }
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityClasses = (priority: string) => {
     switch (priority) {
-      case 'urgent': return '#dc2626'
-      case 'high': return '#ea580c'
-      case 'medium': return '#d97706'
-      case 'low': return '#65a30d'
-      default: return '#6b7280'
+      case 'urgent': return 'bg-red-600 text-white'
+      case 'high': return 'bg-orange-600 text-white'
+      case 'medium': return 'bg-amber-600 text-white'
+      case 'low': return 'bg-green-600 text-white'
+      default: return 'bg-gray-500 text-white'
     }
   }
 
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed'
 
   return (
-    <div className={`task-item ${task.status === 'completed' ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}`}>
-      <div className="task-checkbox">
+    <div className={`flex items-start gap-4 p-6 bg-white border-2 rounded-xl transition-all duration-300 hover:border-gray-300 hover:shadow-md ${
+      task.status === 'completed' ? 'opacity-70' : ''
+    } ${isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}>
+      <div className="mt-1">
         <input
           type="checkbox"
           checked={task.status === 'completed'}
           onChange={handleToggleStatus}
           disabled={loading || isToggling}
-          className="checkbox"
+          className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer disabled:cursor-not-allowed"
         />
       </div>
 
-      <div className="task-content">
-        <div className="task-header">
-          <h4 className="task-title">{task.title}</h4>
-          <div className="task-meta">
-            <span 
-              className="priority-badge"
-              style={{ backgroundColor: getPriorityColor(task.priority) }}
-            >
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+          <h4 className={`text-lg font-semibold text-gray-900 leading-tight ${
+            task.status === 'completed' ? 'line-through' : ''
+          }`}>
+            {task.title}
+          </h4>
+          <div className="flex gap-2 flex-shrink-0">
+            <span className={`px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide ${getPriorityClasses(task.priority)}`}>
               {task.priority}
             </span>
             {task.category && (
               <span 
-                className="category-badge"
+                className="px-2 py-1 rounded-md text-xs font-semibold text-white"
                 style={{ backgroundColor: task.category.color }}
               >
                 {task.category.name}
@@ -104,40 +107,40 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete, loading = fal
         </div>
 
         {task.description && (
-          <p className="task-description">{task.description}</p>
+          <p className="text-gray-600 mb-3 leading-relaxed">{task.description}</p>
         )}
 
-        <div className="task-dates">
-          <span className="created-date">
+        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+          <span>
             Created {formatDate(task.created_at)}
           </span>
           {task.due_date && (
-            <span className={`due-date ${isOverdue ? 'overdue' : ''}`}>
+            <span className={isOverdue ? 'text-red-600 font-semibold' : ''}>
               Due {formatDateTime(task.due_date)}
             </span>
           )}
           {task.completed_at && (
-            <span className="completed-date">
+            <span className="text-green-600">
               Completed {formatDate(task.completed_at)}
             </span>
           )}
         </div>
       </div>
 
-      <div className="task-actions">
+      <div className="flex gap-2 flex-shrink-0 mt-1">
         <button
           onClick={() => onEdit(task)}
-          className="edit-button"
           disabled={loading || isDeleting}
           title="Edit task"
+          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           ✏️
         </button>
         <button
           onClick={handleDelete}
-          className="delete-button"
           disabled={loading || isDeleting}
           title="Delete task"
+          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isDeleting ? '⏳' : '🗑️'}
         </button>

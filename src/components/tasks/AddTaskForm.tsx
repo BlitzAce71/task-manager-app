@@ -48,14 +48,16 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
   const isSubmitDisabled = isDisabled || !title.trim()
 
   return (
-    <form onSubmit={handleSubmit} className="add-task-form">
-      <div className="form-header">
-        <h3>Add New Task</h3>
+    <form onSubmit={handleSubmit} className="p-8">
+      <div className="mb-6">
+        <h3 className="text-2xl font-semibold text-gray-800">Add New Task</h3>
       </div>
 
-      <div className="form-grid">
-        <div className="form-group span-2">
-          <label htmlFor="title">Title *</label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="md:col-span-2">
+          <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
+            Title *
+          </label>
           <input
             id="title"
             type="text"
@@ -65,11 +67,14 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
             required
             disabled={isDisabled}
             maxLength={255}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300"
           />
         </div>
 
-        <div className="form-group span-2">
-          <label htmlFor="description">Description</label>
+        <div className="md:col-span-2">
+          <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+            Description
+          </label>
           <textarea
             id="description"
             value={description}
@@ -78,16 +83,20 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
             disabled={isDisabled}
             rows={3}
             maxLength={1000}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300 resize-vertical min-h-[80px]"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="category">Category</label>
+        <div>
+          <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-2">
+            Category
+          </label>
           <select
             id="category"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
             disabled={isDisabled}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300 bg-white"
           >
             <option value="">No category</option>
             {categories.map((category) => (
@@ -98,13 +107,16 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="priority">Priority</label>
+        <div>
+          <label htmlFor="priority" className="block text-sm font-semibold text-gray-700 mb-2">
+            Priority
+          </label>
           <select
             id="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value as TaskPriority)}
             disabled={isDisabled}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300 bg-white"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -113,23 +125,26 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
           </select>
         </div>
 
-        <div className="form-group span-2">
-          <label htmlFor="dueDate">Due Date</label>
+        <div className="md:col-span-2">
+          <label htmlFor="dueDate" className="block text-sm font-semibold text-gray-700 mb-2">
+            Due Date
+          </label>
           <input
             id="dueDate"
             type="datetime-local"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
             disabled={isDisabled}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-base transition-all duration-200 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 disabled:cursor-not-allowed hover:border-gray-300"
           />
         </div>
       </div>
 
-      <div className="form-actions">
+      <div className="flex justify-end">
         <button
           type="submit"
-          className="submit-button"
           disabled={isSubmitDisabled}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
         >
           {isSubmitting ? 'Adding Task...' : 'Add Task'}
         </button>

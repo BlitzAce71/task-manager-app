@@ -65,36 +65,38 @@ export function TaskList({ tasks, onToggleStatus, onEdit, onDelete, loading = fa
 
   if (loading && tasks.length === 0) {
     return (
-      <div className="task-list-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading tasks...</p>
+      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-lg">Loading tasks...</p>
       </div>
     )
   }
 
   return (
-    <div className="task-list-container">
-      <div className="task-list-header">
-        <div className="task-counts">
-          <span className="count-item">
-            Total: <strong>{taskCounts.total}</strong>
+    <div className="p-8">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 gap-4">
+        <div className="flex flex-wrap gap-4">
+          <span className="text-gray-600">
+            Total: <span className="font-semibold text-gray-800">{taskCounts.total}</span>
           </span>
-          <span className="count-item">
-            Todo: <strong>{taskCounts.todo}</strong>
+          <span className="text-gray-600">
+            Todo: <span className="font-semibold text-blue-600">{taskCounts.todo}</span>
           </span>
-          <span className="count-item">
-            Completed: <strong>{taskCounts.completed}</strong>
+          <span className="text-gray-600">
+            Completed: <span className="font-semibold text-green-600">{taskCounts.completed}</span>
           </span>
         </div>
 
-        <div className="task-controls">
-          <div className="filter-controls">
-            <label htmlFor="filter">Filter:</label>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex items-center gap-2">
+            <label htmlFor="filter" className="text-sm font-medium text-gray-700">
+              Filter:
+            </label>
             <select
               id="filter"
               value={filter}
               onChange={(e) => setFilter(e.target.value as FilterStatus)}
-              className="filter-select"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Tasks</option>
               <option value="todo">To Do</option>
@@ -102,13 +104,15 @@ export function TaskList({ tasks, onToggleStatus, onEdit, onDelete, loading = fa
             </select>
           </div>
 
-          <div className="sort-controls">
-            <label htmlFor="sort">Sort by:</label>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort" className="text-sm font-medium text-gray-700">
+              Sort by:
+            </label>
             <select
               id="sort"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              className="sort-select"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="created">Created Date</option>
               <option value="priority">Priority</option>
@@ -119,18 +123,18 @@ export function TaskList({ tasks, onToggleStatus, onEdit, onDelete, loading = fa
         </div>
       </div>
 
-      <div className="task-list">
+      <div className="space-y-4">
         {filteredAndSortedTasks.length === 0 ? (
-          <div className="empty-state">
+          <div className="text-center py-12">
             {tasks.length === 0 ? (
               <>
-                <h3>No tasks yet</h3>
-                <p>Create your first task to get started!</p>
+                <h3 className="text-xl font-medium text-gray-800 mb-2">No tasks yet</h3>
+                <p className="text-gray-600">Create your first task to get started!</p>
               </>
             ) : (
               <>
-                <h3>No tasks match your filter</h3>
-                <p>Try changing your filter or sort options.</p>
+                <h3 className="text-xl font-medium text-gray-800 mb-2">No tasks match your filter</h3>
+                <p className="text-gray-600">Try changing your filter or sort options.</p>
               </>
             )}
           </div>
