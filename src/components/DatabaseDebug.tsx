@@ -70,20 +70,31 @@ export function DatabaseDebug() {
           logs.push(`✅ Tasks accessible: ${tasks?.length || 0} found`)
         }
 
-        // Test table existence by trying to access system tables
+        // Test creating a category (this will help us see if RLS is working)
         try {
-          const { data: tables, error: tablesError } = await supabase
-            .from('information_schema.tables')
-            .select('table_name')
-            .eq('table_schema', 'public')
-          
-          if (tablesError) {
-            logs.push(`❌ Table check failed: ${tablesError.message}`)
+          const { data: testCategory, error: createError } = await supabase
+            .from('categories')
+            .insert({
+              name: 'Test Category',
+              user_id: user.id
+            })
+            .select()
+            .single()
+            
+          if (createError) {
+            logs.push(`❌ Category creation failed: ${createError.message}`)
+            logs.push(`   Code: ${createError.code}`)
           } else {
-            logs.push(`✅ Tables found: ${tables?.length || 0}`)
+            logs.push(`✅ Category creation works: ${testCategory?.name}`)
+            
+            // Clean up test category
+            await supabase
+              .from('categories')
+              .delete()
+              .eq('id', testCategory.id)
           }
-        } catch (schemaError) {
-          logs.push(`❌ Schema check failed: ${schemaError}`)
+        } catch (createError) {
+          logs.push(`❌ Category creation test failed: ${createError}`)
         }
 
       } catch (error) {
