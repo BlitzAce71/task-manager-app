@@ -34,12 +34,10 @@ export function useTasks() {
     try {
       console.log('Fetching tasks for user:', user.id)
       
+      // Try simple query first without join
       const { data, error } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          category:categories(*)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
