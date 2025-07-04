@@ -32,16 +32,11 @@ export function useTasks() {
     if (!user) return
 
     try {
-      console.log('Fetching tasks for user:', user.id)
-      
-      // Try simple query first without join
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-
-      console.log('Tasks fetch result:', { data, error })
 
       if (error) {
         console.error('Database error:', error)
@@ -61,15 +56,11 @@ export function useTasks() {
     if (!user) return
 
     try {
-      console.log('Fetching categories for user:', user.id)
-      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
         .eq('user_id', user.id)
         .order('name')
-
-      console.log('Categories fetch result:', { data, error })
 
       if (error) {
         console.error('Categories error:', error)
@@ -166,42 +157,22 @@ export function useTasks() {
   useEffect(() => {
     if (user) {
       const loadData = async () => {
-        console.log('🔄 Starting data load, setting loading to true')
         setLoading(true)
         setError(null)
         try {
-          console.log('🔄 Fetching tasks and categories...')
-          
-          // Fetch tasks first
-          try {
-            await fetchTasks()
-            console.log('✅ Tasks loaded successfully')
-          } catch (tasksError) {
-            console.error('❌ Tasks fetch failed:', tasksError)
-            throw tasksError
-          }
-          
-          // Fetch categories second
-          try {
-            await fetchCategories()
-            console.log('✅ Categories loaded successfully')
-          } catch (categoriesError) {
-            console.error('❌ Categories fetch failed:', categoriesError)
-            throw categoriesError
-          }
-          
-          console.log('✅ Both tasks and categories loaded successfully')
+          await Promise.all([
+            fetchTasks(),
+            fetchCategories()
+          ])
         } catch (error) {
-          console.error('❌ Failed to load initial data:', error)
+          console.error('Failed to load initial data:', error)
           setError(error instanceof Error ? error.message : 'Failed to load data')
         } finally {
-          console.log('🔄 Data load complete, setting loading to false')
           setLoading(false)
         }
       }
       loadData()
     } else {
-      console.log('🔄 No user, setting loading to false')
       setLoading(false)
     }
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
