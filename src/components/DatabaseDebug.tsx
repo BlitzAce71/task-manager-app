@@ -17,7 +17,7 @@ export function DatabaseDebug() {
         logs.push(`✅ User authenticated: ${user.email} (${user.id})`)
 
         // Test basic connection
-        const { data: connectionTest, error: connectionError } = await supabase
+        const { error: connectionError } = await supabase
           .from('users')
           .select('count')
           .limit(1)
@@ -70,13 +70,20 @@ export function DatabaseDebug() {
           logs.push(`✅ Tasks accessible: ${tasks?.length || 0} found`)
         }
 
-        // Test table existence
-        const { data: tables, error: tablesError } = await supabase
-          .rpc('get_schema_tables')
-          .catch(() => null)
-
-        if (!tablesError && tables) {
-          logs.push(`✅ Tables found: ${tables.length}`)
+        // Test table existence by trying to access system tables
+        try {
+          const { data: tables, error: tablesError } = await supabase
+            .from('information_schema.tables')
+            .select('table_name')
+            .eq('table_schema', 'public')
+          
+          if (tablesError) {
+            logs.push(`❌ Table check failed: ${tablesError.message}`)
+          } else {
+            logs.push(`✅ Tables found: ${tables?.length || 0}`)
+          }
+        } catch (schemaError) {
+          logs.push(`❌ Schema check failed: ${schemaError}`)
         }
 
       } catch (error) {
