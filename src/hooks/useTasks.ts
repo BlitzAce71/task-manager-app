@@ -168,21 +168,28 @@ export function useTasks() {
   useEffect(() => {
     if (user) {
       const loadData = async () => {
+        console.log('🔄 Starting data load, setting loading to true')
         setLoading(true)
         setError(null)
         try {
+          console.log('🔄 Fetching tasks and categories...')
           await Promise.all([
             fetchTasks(),
             fetchCategories()
           ])
+          console.log('✅ Both tasks and categories loaded successfully')
         } catch (error) {
-          console.error('Failed to load initial data:', error)
+          console.error('❌ Failed to load initial data:', error)
           setError('Failed to load data')
         } finally {
+          console.log('🔄 Data load complete, setting loading to false')
           setLoading(false)
         }
       }
       loadData()
+    } else {
+      console.log('🔄 No user, setting loading to false')
+      setLoading(false)
     }
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
