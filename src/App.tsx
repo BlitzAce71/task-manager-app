@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { AuthProvider } from './contexts/AuthContext'
-import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthPage } from './components/auth/AuthPage'
 import { UserProfile } from './components/UserProfile'
 import './App.css'
 
@@ -82,12 +82,31 @@ function TaskManagerApp() {
   )
 }
 
+function AppContent() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <AuthPage />
+  }
+
+  return <TaskManagerApp />
+}
+
 function App() {
   return (
     <AuthProvider>
-      <ProtectedRoute>
-        <TaskManagerApp />
-      </ProtectedRoute>
+      <AppContent />
     </AuthProvider>
   )
 }
