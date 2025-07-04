@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import type { Task, TaskStatus, TaskPriority, Category } from '../types/database'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 export interface CreateTaskData {
   title: string
@@ -26,6 +27,10 @@ export function useTasks() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  
+  // Keep track of subscription to prevent duplicates
+  const subscriptionRef = useRef<RealtimeChannel | null>(null)
 
   // Fetch tasks
   const fetchTasks = async () => {
@@ -77,7 +82,75 @@ export function useTasks() {
     }
   }
 
-  // Create task
+  // Real-time event handlers
+  const handleRealtimeInsert = async (payload: any) => {
+    if (payload.new?.user_id !== user?.id) return
+    
+    setSyncing(true)
+    try {
+      // Fetch the complete task with category relationship
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          category:categories(*)
+        `)
+        .eq('id', payload.new.id)
+        .single()
+
+      if (!error && data) {
+        setTasks(prev => {
+          // Check if task already exists to prevent duplicates
+          const exists = prev.some(task => task.id === data.id)
+          if (exists) return prev
+          
+          // Add new task at the beginning (most recent first)
+          return [data, ...prev]
+        })
+      }
+    } catch (err) {
+      console.error('Error handling real-time insert:', err)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const handleRealtimeUpdate = async (payload: any) => {
+    if (payload.new?.user_id !== user?.id) return
+    
+    setSyncing(true)
+    try {
+      // Fetch the complete updated task with category relationship
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          category:categories(*)
+        `)
+        .eq('id', payload.new.id)
+        .single()
+
+      if (!error && data) {
+        setTasks(prev => prev.map(task => 
+          task.id === data.id ? data : task
+        ))
+      }
+    } catch (err) {
+      console.error('Error handling real-time update:', err)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const handleRealtimeDelete = (payload: any) => {
+    if (payload.old?.user_id !== user?.id) return
+    
+    setSyncing(true)
+    setTasks(prev => prev.filter(task => task.id !== payload.old.id))
+    setTimeout(() => setSyncing(false), 500) // Brief visual indicator
+  }
+
+  // Create task (no longer optimistically updates since real-time handles it)
   const createTask = async (taskData: CreateTaskData) => {
     if (!user) throw new Error('User not authenticated')
 
@@ -88,15 +161,10 @@ export function useTasks() {
           ...taskData,
           user_id: user.id,
         })
-        .select(`
-          *,
-          category:categories(*)
-        `)
+        .select()
         .single()
 
       if (error) throw error
-      
-      setTasks(prev => [data, ...prev])
       return data
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create task'
@@ -105,22 +173,17 @@ export function useTasks() {
     }
   }
 
-  // Update task
+  // Update task (no longer optimistically updates since real-time handles it)
   const updateTask = async (id: string, updates: UpdateTaskData) => {
     try {
       const { data, error } = await supabase
         .from('tasks')
         .update(updates)
         .eq('id', id)
-        .select(`
-          *,
-          category:categories(*)
-        `)
+        .select()
         .single()
 
       if (error) throw error
-
-      setTasks(prev => prev.map(task => task.id === id ? data : task))
       return data
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update task'
@@ -129,7 +192,7 @@ export function useTasks() {
     }
   }
 
-  // Delete task
+  // Delete task (no longer optimistically updates since real-time handles it)
   const deleteTask = async (id: string) => {
     try {
       const { error } = await supabase
@@ -138,8 +201,6 @@ export function useTasks() {
         .eq('id', id)
 
       if (error) throw error
-
-      setTasks(prev => prev.filter(task => task.id !== id))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete task'
       setError(message)
@@ -156,27 +217,92 @@ export function useTasks() {
     await updateTask(id, { status: newStatus })
   }
 
-  // Initial data fetch
+  // Set up real-time subscription
   useEffect(() => {
-    if (user) {
-      const loadData = async () => {
-        setLoading(true)
-        setError(null)
-        try {
-          await Promise.all([
-            fetchTasks(),
-            fetchCategories()
-          ])
-        } catch (error) {
-          console.error('Failed to load initial data:', error)
-          setError(error instanceof Error ? error.message : 'Failed to load data')
-        } finally {
-          setLoading(false)
-        }
-      }
-      loadData()
-    } else {
+    if (!user) {
       setLoading(false)
+      return
+    }
+
+    const setupRealtimeSubscription = () => {
+      // Clean up existing subscription
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current)
+        subscriptionRef.current = null
+      }
+
+      // Create new subscription
+      const channel = supabase
+        .channel('tasks-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          handleRealtimeInsert
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          handleRealtimeUpdate
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'tasks',
+            filter: `user_id=eq.${user.id}`
+          },
+          handleRealtimeDelete
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Real-time subscription established')
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('Real-time subscription error')
+          }
+        })
+
+      subscriptionRef.current = channel
+    }
+
+    // Initial data fetch
+    const loadData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        await Promise.all([
+          fetchTasks(),
+          fetchCategories()
+        ])
+        
+        // Set up real-time subscription after initial data load
+        setupRealtimeSubscription()
+      } catch (error) {
+        console.error('Failed to load initial data:', error)
+        setError(error instanceof Error ? error.message : 'Failed to load data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+
+    // Cleanup function
+    return () => {
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current)
+        subscriptionRef.current = null
+      }
     }
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -193,6 +319,7 @@ export function useTasks() {
     categories,
     loading,
     error,
+    syncing,
     createTask,
     updateTask,
     deleteTask,

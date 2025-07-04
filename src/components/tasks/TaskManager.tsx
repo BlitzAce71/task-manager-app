@@ -13,6 +13,7 @@ export function TaskManager() {
     categories,
     loading,
     error,
+    syncing,
     createTask,
     updateTask,
     deleteTask,
@@ -39,7 +40,15 @@ export function TaskManager() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <UserProfile />
         <div className="flex-1">
-          <h1 className="text-4xl font-bold text-white mb-2">Task Manager</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-bold text-white">Task Manager</h1>
+            {syncing && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-white text-sm font-medium">Syncing...</span>
+              </div>
+            )}
+          </div>
           <p className="text-blue-100 text-lg">Stay organized and get things done</p>
         </div>
         <button
