@@ -98,6 +98,7 @@ export function TaskManager() {
             onToggleStatus={toggleTaskStatus}
             onEdit={setEditingTask}
             onDelete={deleteTask}
+            loading={loading}
           />
         </div>
       </div>

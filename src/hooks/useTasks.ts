@@ -208,7 +208,7 @@ export function useTasks() {
             console.log('Task already exists (real-time worked)')
             return prev
           })
-        }, 500) // Reduced to 500ms for faster fallback
+        }, 300) // Reduced to 300ms for faster fallback
       }
       
       return data
@@ -221,7 +221,7 @@ export function useTasks() {
   }
 
   // Update task with optimistic updates as fallback for real-time
-  const updateTask = async (id: string, updates: UpdateTaskData) => {
+  const updateTask = async (id: string, updates: UpdateTaskData, skipOptimistic = false) => {
     console.log('Updating task:', id, 'with:', updates)
     try {
       const { data, error } = await supabase
@@ -240,8 +240,8 @@ export function useTasks() {
       }
       console.log('Task updated successfully:', data)
       
-      // Optimistic update as fallback if real-time doesn't trigger
-      if (data) {
+      // Optimistic update as fallback if real-time doesn't trigger (unless skipped)
+      if (data && !skipOptimistic) {
         setTimeout(() => {
           setTasks(prev => {
             const updated = prev.map(task => {
@@ -268,7 +268,7 @@ export function useTasks() {
             })
             return updated
           })
-        }, 500) // Reduced to 500ms for faster fallback
+        }, 300) // Reduced to 300ms for faster fallback
       }
       
       return data
@@ -315,13 +315,30 @@ export function useTasks() {
     }
   }
 
-  // Toggle task status
+  // Toggle task status with immediate UI update
   const toggleTaskStatus = async (id: string) => {
     const task = tasks.find(t => t.id === id)
     if (!task) return
 
     const newStatus: TaskStatus = task.status === 'completed' ? 'todo' : 'completed'
-    await updateTask(id, { status: newStatus })
+    
+    // Immediate optimistic update for better UX
+    console.log('Toggling task status immediately:', id, 'from', task.status, 'to', newStatus)
+    setTasks(prev => prev.map(t => 
+      t.id === id ? { ...t, status: newStatus } : t
+    ))
+    
+    // Then update database (skip optimistic updates since we already did it)
+    try {
+      await updateTask(id, { status: newStatus }, true)
+    } catch (error) {
+      // Revert on error
+      console.error('Failed to update task status, reverting:', error)
+      setTasks(prev => prev.map(t => 
+        t.id === id ? { ...t, status: task.status } : t
+      ))
+      setError('Failed to update task status')
+    }
   }
 
   // Set up real-time subscription
@@ -332,6 +349,7 @@ export function useTasks() {
       setLoading(false)
       setTasks([])
       setCategories([])
+      setError(null)
       return
     }
 
