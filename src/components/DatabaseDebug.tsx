@@ -6,6 +6,9 @@ export function DatabaseDebug() {
   const { user } = useAuth()
   const [debugInfo, setDebugInfo] = useState<string[]>([])
   const [isVisible, setIsVisible] = useState(false)
+  
+  // Set to true to enable debug mode
+  const debugMode = false
 
   useEffect(() => {
     if (!user) return
@@ -107,7 +110,7 @@ export function DatabaseDebug() {
     runDiagnostics()
   }, [user])
 
-  if (!user) return null
+  if (!user || !debugMode) return null
 
   return (
     <>
