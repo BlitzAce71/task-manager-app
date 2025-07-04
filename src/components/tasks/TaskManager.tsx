@@ -74,6 +74,7 @@ export function TaskManager() {
         <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
           <TaskList
             tasks={tasks}
+            categories={categories}
             onToggleStatus={toggleTaskStatus}
             onEdit={setEditingTask}
             onDelete={deleteTask}
