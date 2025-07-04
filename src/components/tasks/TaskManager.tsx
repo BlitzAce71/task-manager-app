@@ -18,6 +18,7 @@ export function TaskManager() {
     updateTask,
     deleteTask,
     toggleTaskStatus,
+    refreshData,
   } = useTasks()
 
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -25,6 +26,7 @@ export function TaskManager() {
 
   // Debug logging
   console.log('TaskManager render - loading:', loading, 'error:', error, 'tasks:', tasks.length, 'syncing:', syncing)
+  console.log('TaskManager render - categories:', categories.length)
 
   const handleCreateTask = async (taskData: Parameters<typeof createTask>[0]) => {
     await createTask(taskData)
@@ -52,12 +54,21 @@ export function TaskManager() {
           </div>
           <p className="text-blue-100 text-lg">Stay organized and get things done</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 px-6 py-3 rounded-xl font-semibold hover:bg-white/30 hover:border-white/50 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-white/25"
-        >
-          {showAddForm ? 'Cancel' : '+ Add Task'}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={refreshData}
+            className="bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 px-4 py-3 rounded-xl font-semibold hover:bg-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-white/25"
+            title="Refresh data"
+          >
+            🔄
+          </button>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 px-6 py-3 rounded-xl font-semibold hover:bg-white/30 hover:border-white/50 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-white/25"
+          >
+            {showAddForm ? 'Cancel' : '+ Add Task'}
+          </button>
+        </div>
       </div>
 
       {error && (

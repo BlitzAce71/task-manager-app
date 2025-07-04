@@ -193,9 +193,10 @@ export function useTasks() {
               console.log('Adding task via optimistic update (real-time fallback)')
               return [data, ...prev]
             }
+            console.log('Task already exists (real-time worked)')
             return prev
           })
-        }, 1000) // Wait 1 second to see if real-time handles it
+        }, 500) // Reduced to 500ms for faster fallback
       }
       
       return data
@@ -247,7 +248,7 @@ export function useTasks() {
             })
             return updated
           })
-        }, 1000) // Wait 1 second to see if real-time handles it
+        }, 500) // Reduced to 500ms for faster fallback
       }
       
       return data
@@ -305,8 +306,12 @@ export function useTasks() {
 
   // Set up real-time subscription
   useEffect(() => {
+    console.log('useTasks effect triggered, user:', user?.id || 'null')
     if (!user) {
+      console.log('No user found, setting loading to false and clearing data')
       setLoading(false)
+      setTasks([])
+      setCategories([])
       return
     }
 
@@ -408,6 +413,21 @@ export function useTasks() {
     }
   }, [error])
 
+  // Manual refresh function
+  const refreshData = async () => {
+    if (!user) return
+    console.log('Manual data refresh triggered')
+    setLoading(true)
+    try {
+      await Promise.all([fetchTasks(), fetchCategories()])
+    } catch (error) {
+      console.error('Manual refresh failed:', error)
+      setError(error instanceof Error ? error.message : 'Failed to refresh data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return {
     tasks,
     categories,
@@ -419,5 +439,6 @@ export function useTasks() {
     deleteTask,
     toggleTaskStatus,
     refetch: fetchTasks,
+    refreshData,
   }
 }
