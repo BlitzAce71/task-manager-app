@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AuthPage } from './components/auth/AuthPage'
 import { UserProfile } from './components/UserProfile'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { DebugInfo } from './components/DebugInfo'
 import './App.css'
 
 function TaskManagerApp() {
@@ -85,6 +87,8 @@ function TaskManagerApp() {
 function AppContent() {
   const { user, loading } = useAuth()
 
+  console.log('AppContent: Render state', { user: user?.email || 'none', loading })
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -97,17 +101,22 @@ function AppContent() {
   }
 
   if (!user) {
+    console.log('AppContent: Showing AuthPage')
     return <AuthPage />
   }
 
+  console.log('AppContent: Showing TaskManagerApp')
   return <TaskManagerApp />
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <DebugInfo />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

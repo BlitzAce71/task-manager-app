@@ -29,12 +29,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('AuthProvider: Initializing...')
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('AuthProvider: Initial session check', { session, error })
+      
+      if (error) {
+        console.error('AuthProvider: Error getting session:', error)
+        setError(error.message)
+      }
+      
       setSession(session)
       setUser(session?.user ?? null)
+      setLoading(false)
+    }).catch((err) => {
+      console.error('AuthProvider: Unexpected error during session check:', err)
+      setError('Failed to initialize authentication')
       setLoading(false)
     })
 
@@ -42,21 +56,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthProvider: Auth state changed', { event, session })
+      
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
 
       // Create user profile when signing up
       if (event === 'SIGNED_IN' && session?.user) {
-        // Check if this is a new user (no profile exists yet)
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', session.user.id)
-          .single()
-        
-        if (!existingUser) {
-          await createUserProfile(session.user)
+        try {
+          // Check if this is a new user (no profile exists yet)
+          const { data: existingUser } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', session.user.id)
+            .single()
+          
+          if (!existingUser) {
+            await createUserProfile(session.user)
+          }
+        } catch (err) {
+          console.error('AuthProvider: Error checking/creating user profile:', err)
         }
       }
     })
