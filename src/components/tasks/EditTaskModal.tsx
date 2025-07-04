@@ -63,7 +63,7 @@ export function EditTaskModal({ task, categories, onSave, onClose, loading = fal
 
   if (!task) return null
 
-  const isDisabled = loading || isSubmitting
+  const isDisabled = isSubmitting // Removed global loading to prevent form from being stuck disabled
   const isSubmitDisabled = isDisabled || !title.trim()
 
   return (

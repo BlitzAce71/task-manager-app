@@ -44,7 +44,7 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
     }
   }
 
-  const isDisabled = loading || isSubmitting
+  const isDisabled = isSubmitting // Removed global loading to prevent form from being stuck disabled
   const isSubmitDisabled = isDisabled || !title.trim()
 
   return (

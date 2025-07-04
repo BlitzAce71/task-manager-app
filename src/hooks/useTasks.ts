@@ -34,8 +34,12 @@ export function useTasks() {
 
   // Fetch tasks
   const fetchTasks = async () => {
-    if (!user) return
+    if (!user) {
+      console.log('No user found, skipping task fetch')
+      return
+    }
 
+    console.log('Fetching tasks for user:', user.id)
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -51,6 +55,7 @@ export function useTasks() {
         throw error
       }
       
+      console.log('Tasks fetched successfully:', data?.length || 0)
       setTasks(data || [])
     } catch (err) {
       console.error('Failed to fetch tasks:', err)
@@ -61,8 +66,12 @@ export function useTasks() {
 
   // Fetch categories
   const fetchCategories = async () => {
-    if (!user) return
+    if (!user) {
+      console.log('No user found, skipping categories fetch')
+      return
+    }
 
+    console.log('Fetching categories for user:', user.id)
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -75,6 +84,7 @@ export function useTasks() {
         throw error
       }
       
+      console.log('Categories fetched successfully:', data?.length || 0)
       setCategories(data || [])
     } catch (err) {
       console.error('Failed to fetch categories:', err)
@@ -277,20 +287,25 @@ export function useTasks() {
 
     // Initial data fetch
     const loadData = async () => {
+      console.log('Starting data load...')
       setLoading(true)
       setError(null)
       try {
+        console.log('Fetching tasks and categories...')
         await Promise.all([
           fetchTasks(),
           fetchCategories()
         ])
         
+        console.log('Data fetch completed, setting up real-time subscription...')
         // Set up real-time subscription after initial data load
         setupRealtimeSubscription()
+        console.log('Real-time subscription setup completed')
       } catch (error) {
         console.error('Failed to load initial data:', error)
         setError(error instanceof Error ? error.message : 'Failed to load data')
       } finally {
+        console.log('Setting loading to false')
         setLoading(false)
       }
     }

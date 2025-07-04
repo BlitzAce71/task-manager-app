@@ -79,7 +79,7 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete, loading = fal
           type="checkbox"
           checked={task.status === 'completed'}
           onChange={handleToggleStatus}
-          disabled={loading || isToggling}
+          disabled={isToggling}
           className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer disabled:cursor-not-allowed"
         />
       </div>
@@ -130,7 +130,7 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete, loading = fal
       <div className="flex gap-2 flex-shrink-0 mt-1">
         <button
           onClick={() => onEdit(task)}
-          disabled={loading || isDeleting}
+          disabled={isDeleting}
           title="Edit task"
           className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -138,7 +138,7 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete, loading = fal
         </button>
         <button
           onClick={handleDelete}
-          disabled={loading || isDeleting}
+          disabled={isDeleting}
           title="Delete task"
           className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >

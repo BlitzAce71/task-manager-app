@@ -23,7 +23,8 @@ export function TaskManager() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
 
-  // Debug logging (removed for cleaner console)
+  // Debug logging
+  console.log('TaskManager render - loading:', loading, 'error:', error, 'tasks:', tasks.length, 'syncing:', syncing)
 
   const handleCreateTask = async (taskData: Parameters<typeof createTask>[0]) => {
     await createTask(taskData)
