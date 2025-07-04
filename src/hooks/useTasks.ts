@@ -408,27 +408,38 @@ export function useTasks() {
       subscriptionRef.current = channel
     }
 
-    // Initial data fetch
+    // Initial data fetch with timeout protection
     const loadData = async () => {
-      console.log('Starting data load...')
+      logger.info('Starting data load for user', { userId: user.id })
       setLoading(true)
       setError(null)
+      
+      // Add timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        logger.warn('Data load timeout - setting loading to false')
+        setLoading(false)
+        setError('Data loading timeout. Please try refreshing the page.')
+      }, 15000) // 15 second timeout
+      
       try {
-        console.log('Fetching tasks and categories...')
+        logger.debug('Fetching tasks and categories...')
         await Promise.all([
           fetchTasks(),
           fetchCategories()
         ])
         
-        console.log('Data fetch completed, setting up real-time subscription...')
+        clearTimeout(timeoutId)
+        logger.info('Data fetch completed, setting up real-time subscription...')
         // Set up real-time subscription after initial data load
         setupRealtimeSubscription()
-        console.log('Real-time subscription setup completed')
+        logger.debug('Real-time subscription setup completed')
       } catch (error) {
-        console.error('Failed to load initial data:', error)
+        clearTimeout(timeoutId)
+        logger.error('Failed to load initial data', error)
         setError(error instanceof Error ? error.message : 'Failed to load data')
       } finally {
-        console.log('Setting loading to false')
+        clearTimeout(timeoutId)
+        logger.debug('Setting loading to false')
         setLoading(false)
       }
     }

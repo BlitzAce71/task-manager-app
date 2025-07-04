@@ -34,9 +34,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     console.log('AuthProvider: Initializing...')
     
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.warn('AuthProvider: Session check timeout - setting loading to false')
+      setLoading(false)
+      setError('Authentication initialization timeout')
+    }, 10000) // 10 second timeout
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('AuthProvider: Initial session check', { session, error })
+      clearTimeout(timeoutId)
+      console.log('AuthProvider: Initial session check', { 
+        hasSession: !!session, 
+        hasUser: !!session?.user,
+        error: error?.message 
+      })
       
       if (error) {
         console.error('AuthProvider: Error getting session:', error)
@@ -47,6 +59,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(session?.user ?? null)
       setLoading(false)
     }).catch((err) => {
+      clearTimeout(timeoutId)
       console.error('AuthProvider: Unexpected error during session check:', err)
       setError('Failed to initialize authentication')
       setLoading(false)
