@@ -44,7 +44,8 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
     }
   }
 
-  const isDisabled = loading || isSubmitting || !title.trim()
+  const isDisabled = loading || isSubmitting
+  const isSubmitDisabled = isDisabled || !title.trim()
 
   return (
     <form onSubmit={handleSubmit} className="add-task-form">
@@ -128,7 +129,7 @@ export function AddTaskForm({ categories, onSubmit, loading = false }: AddTaskFo
         <button
           type="submit"
           className="submit-button"
-          disabled={isDisabled}
+          disabled={isSubmitDisabled}
         >
           {isSubmitting ? 'Adding Task...' : 'Add Task'}
         </button>
