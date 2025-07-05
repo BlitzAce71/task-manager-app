@@ -14,6 +14,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
+    storage: window.localStorage,
+    storageKey: 'supabase.auth.token',
   },
   realtime: {
     params: {
@@ -26,3 +28,13 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     },
   },
 })
+
+// Debug logging for session management
+if (import.meta.env.DEV) {
+  console.log('🔧 Supabase client initialized with config:', {
+    url: supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+    storage: 'localStorage',
+    flowType: 'pkce'
+  })
+}
