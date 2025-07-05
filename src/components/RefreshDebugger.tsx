@@ -59,7 +59,7 @@ export function RefreshDebugger() {
               error: authError?.message,
               hasUser: !!authData.user
             }
-          } catch (e) {
+          } catch (e: any) {
             tests.authCheck = { status: 'failed', error: e.message }
           }
 
@@ -73,13 +73,13 @@ export function RefreshDebugger() {
               isExpired: sessionData.session?.expires_at ? 
                 (sessionData.session.expires_at * 1000 < Date.now()) : false
             }
-          } catch (e) {
+          } catch (e: any) {
             tests.sessionCheck = { status: 'failed', error: e.message }
           }
 
           // Test 3: Basic DB connectivity
           try {
-            const { data: dbData, error: dbError } = await supabase
+            const { error: dbError } = await supabase
               .from('tasks')
               .select('count')
               .limit(1)
@@ -88,7 +88,7 @@ export function RefreshDebugger() {
               error: dbError?.message,
               code: dbError?.code
             }
-          } catch (e) {
+          } catch (e: any) {
             tests.dbConnectivity = { status: 'failed', error: e.message }
           }
 
@@ -105,7 +105,7 @@ export function RefreshDebugger() {
               code: tasksError?.code,
               count: tasksData?.length || 0
             }
-          } catch (e) {
+          } catch (e: any) {
             tests.tasksQuery = { status: 'failed', error: e.message }
           }
 
