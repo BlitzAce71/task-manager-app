@@ -1,7 +1,9 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AuthPage } from './components/auth/AuthPage'
 import { TaskManager } from './components/tasks/TaskManager'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { NotFoundPage } from './components/NotFoundPage'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -18,18 +20,29 @@ function AppContent() {
   }
 
   if (!user) {
-    return <AuthPage />
+    return (
+      <Routes>
+        <Route path="*" element={<AuthPage />} />
+      </Routes>
+    )
   }
 
-  return <TaskManager />
+  return (
+    <Routes>
+      <Route path="/" element={<TaskManager />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  )
 }
 
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <Router>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </Router>
     </ErrorBoundary>
   )
 }

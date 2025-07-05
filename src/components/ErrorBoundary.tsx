@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const eventId = `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const eventId = `error-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
     
     this.setState({
       error,
@@ -45,8 +45,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         timestamp: new Date().toISOString(),
       })
       
-      // TODO: Send to error reporting service (e.g., Sentry, LogRocket)
-      // Example: Sentry.captureException(error, { contexts: { errorInfo } })
+      // Enhanced error reporting with context
+      this.reportError(error, errorInfo, eventId)
     }
   }
 
@@ -61,6 +61,47 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   private handleReload = () => {
     window.location.reload()
+  }
+
+  private reportError = (error: Error, errorInfo: ErrorInfo, eventId: string) => {
+    // Enhanced error reporting with helpful context
+    const errorReport = {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      eventId,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      userId: null, // Could be populated from auth context
+      sessionId: sessionStorage.getItem('sessionId') || 'unknown',
+      buildVersion: import.meta.env.VITE_APP_VERSION || 'unknown',
+      previousActions: this.getRecentActions(),
+    }
+
+    // Console logging with structured data
+    console.group(`🚨 Error Report - ${eventId}`)
+    console.error('Error:', error)
+    console.error('Component Stack:', errorInfo.componentStack)
+    console.error('Full Report:', errorReport)
+    console.groupEnd()
+
+    // TODO: Send to error reporting service
+    // Example integrations:
+    // - Sentry.captureException(error, { contexts: { errorInfo }, tags: { eventId } })
+    // - LogRocket.captureException(error)
+    // - Custom API: fetch('/api/errors', { method: 'POST', body: JSON.stringify(errorReport) })
+  }
+
+  private getRecentActions = () => {
+    // Get recent user actions from localStorage or sessionStorage
+    // This helps with debugging by showing what the user was doing before the error
+    try {
+      const actions = localStorage.getItem('recentActions')
+      return actions ? JSON.parse(actions) : []
+    } catch {
+      return []
+    }
   }
 
   render() {
@@ -81,7 +122,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
               <p className="text-gray-600 mb-6">
-                We're sorry, but something unexpected happened. Please try refreshing the page.
+                Don't worry - this happens sometimes. We've been notified and are working to fix it.
               </p>
               
               {this.state.eventId && (
@@ -154,7 +195,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 // Hook-based error handler for functional components
 export function useErrorHandler() {
   return (error: Error, errorInfo?: ErrorInfo) => {
-    const eventId = `runtime-error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const eventId = `runtime-error-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
     
     if (import.meta.env.DEV) {
       console.error('Runtime error:', error, errorInfo)

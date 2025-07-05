@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
+import { getErrorMessage, trackUserAction } from '../utils/networkUtils'
 import type { Task, TaskStatus, TaskPriority, Category } from '../types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -93,7 +94,7 @@ export function useTasks() {
       setTasks(data || [])
     } catch (err) {
       logger.error('Failed to fetch tasks', err)
-      const message = err instanceof Error ? err.message : 'Failed to fetch tasks'
+      const message = err instanceof Error ? getErrorMessage(err as any) : 'Unable to load your tasks'
       throw new Error(message)
     }
   }
@@ -122,7 +123,7 @@ export function useTasks() {
       setCategories(data || [])
     } catch (err) {
       logger.error('Failed to fetch categories', err)
-      throw new Error(err instanceof Error ? err.message : 'Failed to fetch categories')
+      throw new Error(err instanceof Error ? getErrorMessage(err as any) : 'Unable to load categories')
     }
   }
 
@@ -206,21 +207,15 @@ export function useTasks() {
     setTimeout(() => setSyncing(false), 500) // Brief visual indicator
   }
 
-  // Create task with optimistic updates as fallback for real-time
+  // Create task with retry mechanism and user-friendly error handling
   const createTask = async (taskData: CreateTaskData) => {
-    if (!user) throw new Error('User not authenticated')
+    if (!user) throw new Error('Please sign in to create tasks')
 
     console.log('🔄 useTasks: Creating task with data:', taskData)
+    trackUserAction('create_task', { title: taskData.title, priority: taskData.priority })
     
-    // Add timeout protection for database operations
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Task creation timed out. Please check your connection and try again.'))
-      }, 8000) // 8 second timeout
-    })
-
-    try {
-      const createPromise = supabase
+    const createTaskOperation = async () => {
+      const { data, error } = await supabase
         .from('tasks')
         .insert({
           ...taskData,
@@ -232,33 +227,66 @@ export function useTasks() {
         `)
         .single()
 
-      const { data, error } = await Promise.race([createPromise, timeoutPromise]) as any
-
       if (error) {
         console.error('❌ useTasks: Create task error:', error)
         throw error
       }
-      console.log('✅ useTasks: Task created successfully:', data)
-      
-      // Optimistic update as fallback if real-time doesn't trigger
-      if (data) {
-        setTimeout(() => {
-          setTasks(prev => {
-            const exists = prev.some(task => task.id === data.id)
-            if (!exists) {
-              console.log('➕ useTasks: Adding task via optimistic update (real-time fallback)')
-              return [data, ...prev]
-            }
-            console.log('✓ useTasks: Task already exists (real-time worked)')
-            return prev
-          })
-        }, 300) // Reduced to 300ms for faster fallback
-      }
       
       return data
+    }
+
+    try {
+      // Simple retry mechanism with timeout
+      let lastError: Error
+      const maxRetries = 3
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const data = await Promise.race([
+            createTaskOperation(),
+            new Promise((_, reject) => {
+              setTimeout(() => {
+                reject(new Error('Creating task is taking longer than expected. Please try again.'))
+              }, 10000) // 10 second timeout
+            })
+          ]) as any
+          
+          // Success - set up optimistic update and return
+          console.log('✅ useTasks: Task created successfully:', data)
+          
+          // Optimistic update as fallback if real-time doesn't trigger
+          if (data) {
+            setTimeout(() => {
+              setTasks(prev => {
+                const exists = prev.some(task => task.id === data.id)
+                if (!exists) {
+                  console.log('➕ useTasks: Adding task via optimistic update (real-time fallback)')
+                  return [data, ...prev]
+                }
+                console.log('✓ useTasks: Task already exists (real-time worked)')
+                return prev
+              })
+            }, 300) // Reduced to 300ms for faster fallback
+          }
+          
+          return data
+        } catch (error) {
+          lastError = error as Error
+          
+          if (attempt === maxRetries) {
+            throw lastError
+          }
+          
+          // Wait before retry with exponential backoff
+          const delay = 1000 * Math.pow(2, attempt - 1)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+      
+      throw lastError!
     } catch (err) {
       console.error('❌ useTasks: Create task failed:', err)
-      const message = err instanceof Error ? err.message : 'Failed to create task'
+      const message = err instanceof Error ? getErrorMessage(err as any) : 'Unable to create task'
       setError(message)
       throw new Error(message)
     }
@@ -461,7 +489,7 @@ export function useTasks() {
       const timeoutId = setTimeout(() => {
         logger.warn('Data load timeout - setting loading to false')
         setLoading(false)
-        setError('Data loading timeout. Please try refreshing the page.')
+        setError('Taking longer than expected to load. Please check your connection and try again.')
       }, 15000) // 15 second timeout
       
       try {
@@ -479,7 +507,7 @@ export function useTasks() {
       } catch (error) {
         clearTimeout(timeoutId)
         logger.error('Failed to load initial data', error)
-        setError(error instanceof Error ? error.message : 'Failed to load data')
+        setError(error instanceof Error ? error.message : 'Unable to load your data')
       } finally {
         clearTimeout(timeoutId)
         logger.debug('Setting loading to false')
@@ -515,7 +543,7 @@ export function useTasks() {
       await Promise.all([fetchTasks(), fetchCategories()])
     } catch (error) {
       console.error('Manual refresh failed:', error)
-      setError(error instanceof Error ? error.message : 'Failed to refresh data')
+      setError(error instanceof Error ? getErrorMessage(error as any) : 'Unable to refresh your data')
     } finally {
       setLoading(false)
     }

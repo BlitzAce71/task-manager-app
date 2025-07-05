@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTasks } from '../../hooks/useTasks'
+import { useNetworkStatus } from '../../hooks/useNetworkStatus'
 import { AddTaskForm } from './AddTaskForm'
 import { TaskList } from './TaskList'
 import { EditTaskModal } from './EditTaskModal'
@@ -7,7 +8,9 @@ import { UserProfile } from '../UserProfile'
 import { DatabaseDebug } from '../DatabaseDebug'
 import { AuthDebug } from '../AuthDebug'
 import { RefreshDebugger } from '../RefreshDebugger'
+import { DataLoadingFallback, OfflineFallback } from '../FallbackUI'
 import { recovery } from '../../utils/recovery'
+import { trackUserAction, clearOldActions } from '../../utils/networkUtils'
 import type { Task } from '../../types/database'
 
 export function TaskManager() {
@@ -24,6 +27,7 @@ export function TaskManager() {
     refreshData,
   } = useTasks()
 
+  const { offline, justCameOnline, resetJustCameOnline } = useNetworkStatus()
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [loadingStartTime] = useState(Date.now())
@@ -58,6 +62,21 @@ export function TaskManager() {
     }
   }, [loading, tasks.length])
 
+  // Handle network status changes
+  useEffect(() => {
+    if (justCameOnline) {
+      trackUserAction('network_reconnected')
+      refreshData()
+      resetJustCameOnline()
+    }
+  }, [justCameOnline, refreshData, resetJustCameOnline])
+
+  // Clear old actions periodically
+  useEffect(() => {
+    const interval = setInterval(clearOldActions, 30 * 60 * 1000) // Every 30 minutes
+    return () => clearInterval(interval)
+  }, [])
+
   const handleCreateTask = async (taskData: Parameters<typeof createTask>[0]) => {
     await createTask(taskData)
     setShowAddForm(false)
@@ -79,6 +98,12 @@ export function TaskManager() {
               <div className="flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="text-white text-sm font-medium">Syncing...</span>
+              </div>
+            )}
+            {offline && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-red-500/20 backdrop-blur-sm rounded-full">
+                <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                <span className="text-white text-sm font-medium">Offline</span>
               </div>
             )}
           </div>
@@ -140,19 +165,29 @@ export function TaskManager() {
             <div className="flex-1">
               <span className="font-medium">⚠️ {error}</span>
               <div className="text-sm mt-2">
-                {error.includes('timeout') ? (
+                {error.includes('timeout') || error.includes('longer than expected') ? (
                   <div>
-                    <p>The app seems unresponsive. Try:</p>
+                    <p>The app is taking longer than usual to respond. Try:</p>
                     <ul className="list-disc list-inside mt-1">
-                      <li>Clicking the refresh button above</li>
-                      <li>Refreshing your browser</li>
+                      <li>Clicking the retry button</li>
                       <li>Checking your internet connection</li>
+                      <li>Refreshing your browser if the issue persists</li>
                     </ul>
                   </div>
-                ) : error.includes('relation does not exist') ? (
-                  <p>Database tables need to be created. Please run the migration in your Supabase dashboard.</p>
+                ) : error.includes('Database tables not found') ? (
+                  <p>Your database needs to be set up. Please check your Supabase configuration.</p>
+                ) : error.includes('sign in') || error.includes('Authentication') ? (
+                  <p>Please sign out and sign back in to continue.</p>
+                ) : error.includes('connection') || error.includes('network') ? (
+                  <div>
+                    <p>Having trouble connecting. Please:</p>
+                    <ul className="list-disc list-inside mt-1">
+                      <li>Check your internet connection</li>
+                      <li>Try again in a few moments</li>
+                    </ul>
+                  </div>
                 ) : (
-                  <p>An error occurred while loading your tasks. Please try refreshing.</p>
+                  <p>Something went wrong. Please try refreshing or contact support if the issue continues.</p>
                 )}
               </div>
             </div>
@@ -177,14 +212,20 @@ export function TaskManager() {
         )}
 
         <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden">
-          <TaskList
-            tasks={tasks}
-            categories={categories}
-            onToggleStatus={toggleTaskStatus}
-            onEdit={setEditingTask}
-            onDelete={deleteTask}
-            loading={loading}
-          />
+          {offline ? (
+            <OfflineFallback onRetry={refreshData} />
+          ) : error && !loading ? (
+            <DataLoadingFallback onRetry={refreshData} />
+          ) : (
+            <TaskList
+              tasks={tasks}
+              categories={categories}
+              onToggleStatus={toggleTaskStatus}
+              onEdit={setEditingTask}
+              onDelete={deleteTask}
+              loading={loading}
+            />
+          )}
         </div>
       </div>
 
