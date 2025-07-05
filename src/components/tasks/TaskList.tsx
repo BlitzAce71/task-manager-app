@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, memo, useCallback } from 'react'
 import { TaskItem } from './TaskItem'
 import type { Task, TaskPriority } from '../../types/database'
 
@@ -15,7 +15,7 @@ type FilterStatus = 'all' | 'todo' | 'in_progress' | 'completed' | 'cancelled'
 type FilterPriority = 'all' | TaskPriority
 type SortOption = 'created' | 'priority' | 'alphabetical' | 'due_date'
 
-export function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete, loading = false }: TaskListProps) {
+const TaskList = memo(function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete, loading = false }: TaskListProps) {
   // State for all filters
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
@@ -119,16 +119,19 @@ export function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete, 
   }, [tasks, filteredAndSortedTasks])
   
   // Clear all filters
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setSearchQuery('')
     setStatusFilter('all')
     setPriorityFilter('all')
     setCategoryFilter('all')
     setSort('created')
-  }
+  }, [])
   
   // Check if any filters are active
-  const hasActiveFilters = searchQuery.trim() || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all'
+  const hasActiveFilters = useMemo(() => 
+    searchQuery.trim() || statusFilter !== 'all' || priorityFilter !== 'all' || categoryFilter !== 'all',
+    [searchQuery, statusFilter, priorityFilter, categoryFilter]
+  )
 
   if (loading && tasks.length === 0) {
     return (
@@ -322,4 +325,6 @@ export function TaskList({ tasks, categories, onToggleStatus, onEdit, onDelete, 
       </div>
     </div>
   )
-}
+})
+
+export { TaskList }

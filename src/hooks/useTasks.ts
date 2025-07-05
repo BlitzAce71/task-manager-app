@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
@@ -535,7 +535,7 @@ export function useTasks() {
   }, [error])
 
   // Manual refresh function
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     if (!user) return
     console.log('Manual data refresh triggered')
     setLoading(true)
@@ -547,9 +547,10 @@ export function useTasks() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, fetchTasks, fetchCategories])
 
-  return {
+  // Memoize the return object to prevent unnecessary re-renders
+  return useMemo(() => ({
     tasks,
     categories,
     loading,
@@ -561,5 +562,17 @@ export function useTasks() {
     toggleTaskStatus,
     refetch: fetchTasks,
     refreshData,
-  }
+  }), [
+    tasks,
+    categories,
+    loading,
+    error,
+    syncing,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTaskStatus,
+    fetchTasks,
+    refreshData,
+  ])
 }

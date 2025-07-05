@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo, useCallback, useMemo } from 'react'
 import type { Task } from '../../types/database'
 
 interface TaskItemProps {
@@ -8,11 +8,11 @@ interface TaskItemProps {
   onDelete: (id: string) => Promise<void>
 }
 
-export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemProps) {
+const TaskItem = memo(function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemProps) {
   const [isToggling, setIsToggling] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const handleToggleStatus = async () => {
+  const handleToggleStatus = useCallback(async () => {
     setIsToggling(true)
     try {
       await onToggleStatus(task.id)
@@ -21,9 +21,9 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemPro
     } finally {
       setIsToggling(false)
     }
-  }
+  }, [onToggleStatus, task.id])
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!window.confirm('Are you sure you want to delete this task?')) {
       return
     }
@@ -36,18 +36,22 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemPro
     } finally {
       setIsDeleting(false)
     }
-  }
+  }, [onDelete, task.id])
 
-  const formatDate = (dateString: string) => {
+  const handleEdit = useCallback(() => {
+    onEdit(task)
+  }, [onEdit, task])
+
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     })
-  }
+  }, [])
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = useCallback((dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleString('en-US', {
       month: 'short',
@@ -55,9 +59,9 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemPro
       hour: 'numeric',
       minute: '2-digit',
     })
-  }
+  }, [])
 
-  const getPriorityClasses = (priority: string) => {
+  const getPriorityClasses = useCallback((priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-600 text-white'
       case 'high': return 'bg-orange-600 text-white'
@@ -65,9 +69,17 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemPro
       case 'low': return 'bg-green-600 text-white'
       default: return 'bg-gray-500 text-white'
     }
-  }
+  }, [])
 
-  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed'
+  const isOverdue = useMemo(() => 
+    task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed',
+    [task.due_date, task.status]
+  )
+
+  const priorityClasses = useMemo(() => 
+    getPriorityClasses(task.priority),
+    [getPriorityClasses, task.priority]
+  )
 
   return (
     <div className={`flex items-start gap-4 p-6 bg-white border-2 rounded-xl transition-all duration-300 hover:border-gray-300 hover:shadow-md ${
@@ -91,7 +103,7 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemPro
             {task.title}
           </h4>
           <div className="flex gap-2 flex-shrink-0">
-            <span className={`px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide ${getPriorityClasses(task.priority)}`}>
+            <span className={`px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide ${priorityClasses}`}>
               {task.priority}
             </span>
             {task.category && (
@@ -128,7 +140,7 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemPro
 
       <div className="flex gap-2 flex-shrink-0 mt-1">
         <button
-          onClick={() => onEdit(task)}
+          onClick={handleEdit}
           disabled={isDeleting}
           title="Edit task"
           className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -146,4 +158,6 @@ export function TaskItem({ task, onToggleStatus, onEdit, onDelete }: TaskItemPro
       </div>
     </div>
   )
-}
+})
+
+export { TaskItem }

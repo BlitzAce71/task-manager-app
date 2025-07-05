@@ -1,37 +1,44 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { AuthPage } from './components/auth/AuthPage'
-import { TaskManager } from './components/tasks/TaskManager'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { NotFoundPage } from './components/NotFoundPage'
+import { LoadingSpinner } from './components/LoadingSpinner'
+
+// Lazy load components for code splitting
+const AuthPage = lazy(() => import('./components/auth/AuthPage').then(module => ({
+  default: module.AuthPage
+})))
+const TaskManager = lazy(() => import('./components/tasks/TaskManager').then(module => ({
+  default: module.TaskManager
+})))
+const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(module => ({
+  default: module.NotFoundPage
+})))
 
 function AppContent() {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700">
-        <div className="text-center text-white">
-          <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner text="Authenticating..." />
   }
 
   if (!user) {
     return (
-      <Routes>
-        <Route path="*" element={<AuthPage />} />
-      </Routes>
+      <Suspense fallback={<LoadingSpinner text="Loading authentication..." />}>
+        <Routes>
+          <Route path="*" element={<AuthPage />} />
+        </Routes>
+      </Suspense>
     )
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<TaskManager />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <Suspense fallback={<LoadingSpinner text="Loading application..." />}>
+      <Routes>
+        <Route path="/" element={<TaskManager />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   )
 }
 

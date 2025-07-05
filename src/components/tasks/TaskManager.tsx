@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTasks } from '../../hooks/useTasks'
 import { useNetworkStatus } from '../../hooks/useNetworkStatus'
 import { AddTaskForm } from './AddTaskForm'
@@ -77,15 +77,23 @@ export function TaskManager() {
     return () => clearInterval(interval)
   }, [])
 
-  const handleCreateTask = async (taskData: Parameters<typeof createTask>[0]) => {
+  const handleCreateTask = useCallback(async (taskData: Parameters<typeof createTask>[0]) => {
     await createTask(taskData)
     setShowAddForm(false)
-  }
+  }, [createTask])
 
-  const handleUpdateTask = async (id: string, updates: Parameters<typeof updateTask>[1]) => {
+  const handleUpdateTask = useCallback(async (id: string, updates: Parameters<typeof updateTask>[1]) => {
     await updateTask(id, updates)
     setEditingTask(null)
-  }
+  }, [updateTask])
+
+  const handleToggleAddForm = useCallback(() => {
+    setShowAddForm(prev => !prev)
+  }, [])
+
+  const handleCloseEditModal = useCallback(() => {
+    setEditingTask(null)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 p-4 md:p-8">
@@ -118,7 +126,7 @@ export function TaskManager() {
             🔄
           </button>
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
+            onClick={handleToggleAddForm}
             className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 px-6 py-3 rounded-xl font-semibold hover:bg-white/30 hover:border-white/50 transition-all duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-white/25"
           >
             {showAddForm ? 'Cancel' : '+ Add Task'}
@@ -234,7 +242,7 @@ export function TaskManager() {
           task={editingTask}
           categories={categories}
           onSave={handleUpdateTask}
-          onClose={() => setEditingTask(null)}
+          onClose={handleCloseEditModal}
         />
       )}
       
