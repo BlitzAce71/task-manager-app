@@ -20,7 +20,23 @@ export function AddTaskForm({ categories, onSubmit }: AddTaskFormProps) {
     
     if (!title.trim()) return
 
+    console.log('🔄 AddTaskForm: Starting task creation...', {
+      title: title.trim(),
+      description: description.trim(),
+      category_id: categoryId || undefined,
+      priority,
+      due_date: dueDate || undefined,
+    })
+
     setIsSubmitting(true)
+
+    // Add timeout protection
+    const timeoutId = setTimeout(() => {
+      console.error('⏱️ AddTaskForm: Task creation timeout - resetting form')
+      setIsSubmitting(false)
+      alert('Task creation timed out. Please try again.')
+    }, 10000) // 10 second timeout
+
     try {
       await onSubmit({
         title: title.trim(),
@@ -30,6 +46,9 @@ export function AddTaskForm({ categories, onSubmit }: AddTaskFormProps) {
         due_date: dueDate || undefined,
       })
 
+      clearTimeout(timeoutId)
+      console.log('✅ AddTaskForm: Task creation successful')
+
       // Reset form
       setTitle('')
       setDescription('')
@@ -37,8 +56,11 @@ export function AddTaskForm({ categories, onSubmit }: AddTaskFormProps) {
       setPriority('medium')
       setDueDate('')
     } catch (error) {
-      console.error('Failed to create task:', error)
+      clearTimeout(timeoutId)
+      console.error('❌ AddTaskForm: Task creation failed:', error)
+      alert(`Failed to create task: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
+      clearTimeout(timeoutId)
       setIsSubmitting(false)
     }
   }

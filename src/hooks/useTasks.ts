@@ -210,9 +210,17 @@ export function useTasks() {
   const createTask = async (taskData: CreateTaskData) => {
     if (!user) throw new Error('User not authenticated')
 
-    console.log('Creating task with data:', taskData)
+    console.log('🔄 useTasks: Creating task with data:', taskData)
+    
+    // Add timeout protection for database operations
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Task creation timed out. Please check your connection and try again.'))
+      }, 8000) // 8 second timeout
+    })
+
     try {
-      const { data, error } = await supabase
+      const createPromise = supabase
         .from('tasks')
         .insert({
           ...taskData,
@@ -224,11 +232,13 @@ export function useTasks() {
         `)
         .single()
 
+      const { data, error } = await Promise.race([createPromise, timeoutPromise]) as any
+
       if (error) {
-        console.error('Create task error:', error)
+        console.error('❌ useTasks: Create task error:', error)
         throw error
       }
-      console.log('Task created successfully:', data)
+      console.log('✅ useTasks: Task created successfully:', data)
       
       // Optimistic update as fallback if real-time doesn't trigger
       if (data) {
@@ -236,10 +246,10 @@ export function useTasks() {
           setTasks(prev => {
             const exists = prev.some(task => task.id === data.id)
             if (!exists) {
-              console.log('Adding task via optimistic update (real-time fallback)')
+              console.log('➕ useTasks: Adding task via optimistic update (real-time fallback)')
               return [data, ...prev]
             }
-            console.log('Task already exists (real-time worked)')
+            console.log('✓ useTasks: Task already exists (real-time worked)')
             return prev
           })
         }, 300) // Reduced to 300ms for faster fallback
@@ -247,7 +257,7 @@ export function useTasks() {
       
       return data
     } catch (err) {
-      console.error('Create task failed:', err)
+      console.error('❌ useTasks: Create task failed:', err)
       const message = err instanceof Error ? err.message : 'Failed to create task'
       setError(message)
       throw new Error(message)
