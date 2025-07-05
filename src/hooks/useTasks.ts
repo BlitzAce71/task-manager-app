@@ -41,8 +41,20 @@ export function useTasks() {
     }
 
     logger.info('Fetching tasks for user', { userId: user.id, email: user.email })
+    
+    // Test if we can access Supabase at all
+    console.log('Testing Supabase session...')
+    const session = await supabase.auth.getSession()
+    console.log('Current session:', {
+      hasSession: !!session.data.session,
+      hasAccessToken: !!session.data.session?.access_token,
+      expiresAt: session.data.session?.expires_at,
+      error: session.error?.message
+    })
+    
     try {
       // First test basic connectivity
+      console.log('Testing basic database connectivity...')
       const { error: testError } = await supabase
         .from('tasks')
         .select('count')

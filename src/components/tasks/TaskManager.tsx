@@ -27,9 +27,20 @@ export function TaskManager() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [loadingStartTime] = useState(Date.now())
 
-  // Debug logging
-  console.log('TaskManager render - loading:', loading, 'error:', error, 'tasks:', tasks.length, 'syncing:', syncing)
-  console.log('TaskManager render - categories:', categories.length)
+  // Debug logging - More detailed for refresh issue
+  console.log('TaskManager render:', {
+    loading,
+    error,
+    tasksCount: tasks.length,
+    categoriesCount: categories.length,
+    syncing,
+    loadingTime: Date.now() - loadingStartTime
+  })
+  
+  // Check if we're hitting the timeout
+  if (loading && (Date.now() - loadingStartTime) > 10000) {
+    console.error('TaskManager: Loading has been stuck for', (Date.now() - loadingStartTime) / 1000, 'seconds')
+  }
 
   // Detect if loading has been stuck for too long
   const isStuckLoading = loading && (Date.now() - loadingStartTime) > 20000 // 20 seconds
